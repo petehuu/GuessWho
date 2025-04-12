@@ -464,17 +464,13 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("skin") && conditionKey.includes("brown"):
             return target.skin.toLowerCase().includes("brown");
 
-        // Hattu
-        case conditionKey.includes("hat") && conditionKey.includes("cap"):
-            return target.hat === "cap";
-        case conditionKey.includes("hat") && conditionKey.includes("fedora"):
-            return target.hat === "fedora";
-        case conditionKey.includes("hat") && conditionKey.includes("beanie"):
-            return target.hat === "beanie";
-        case conditionKey.includes("hat") && conditionKey.includes("none"):
-            return target.hat === "none";
-
-        // Parta tai viikset
+         // Kynnet
+         case conditionKey.includes("nails") && conditionKey.includes("painted"):
+            return target.nails.toLowerCase().includes("painted");
+        case conditionKey.includes("nails") && conditionKey.includes("natural"):
+            return target.nails.toLowerCase().includes("natural");
+            
+         // Parta tai viikset
         case conditionKey.includes("beard"):
             return target.beardMustache.toLowerCase().includes("beard");
         case conditionKey.includes("mustache"):
@@ -483,6 +479,16 @@ function processCondition(conditionKey, target) {
             return target.beardMustache.includes("beard") && target.beardMustache.includes("mustache");   
         case conditionKey.includes("beardMustache") && conditionKey.includes("none"):
             return target.beardMustache === "none";
+            
+       // Hattu
+        case conditionKey.includes("hat") && conditionKey.includes("cap"):
+            return target.hat === "cap";
+        case conditionKey.includes("hat") && conditionKey.includes("fedora"):
+            return target.hat === "fedora";
+        case conditionKey.includes("hat") && conditionKey.includes("beanie"):
+            return target.hat === "beanie";
+        case conditionKey.includes("hat") && conditionKey.includes("none"):
+            return target.hat === "none";            
 
         // T-shirt tarkistukset
         case conditionKey.includes("t-shirt") && conditionKey.includes("high"):
