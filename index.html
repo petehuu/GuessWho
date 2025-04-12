@@ -251,6 +251,9 @@
 
       document.getElementById("question-area").style.display = "block";
       displayCharacters(characters);
+      if (gameRunning) { stopTimer(); }
+      questionCount = 0;
+      gameRunning = 0;
     }
 
 function detectLogicalOperator(question) {
@@ -294,6 +297,7 @@ function calculateFinalResult(results, logicalOperator) {
 let questionCount = 0; // To track the number of questions
 let startTime; // To track when the game started
 let timerInterval; // To manage the timer
+let gameRunning = 0;
 
 // Function to start the timer
 function startTimer() {
@@ -333,7 +337,10 @@ function answerQuestion() {
     questionCount++;
     document.getElementById("question-count").textContent = `Questions asked: ${questionCount}`;
     
-    if (!startTime) {
+    if (!gameRunning) {
+        if (debugMode) {  console.log("answerQuestion : timerInterval empty"); }
+        gameRunning = 1;
+        questionCount = 0;
         startTimer(); // Call the timer start function here
     }
 
@@ -347,6 +354,8 @@ function answerQuestion() {
             const elapsedTime = Math.floor((new Date() - startTime) / 1000); // Calculate total time elapsed
             output.textContent = `Yes! Congratulations! You solved it in ${elapsedTime}s with ${questionCount} questions.`;
             console.log("Game over. Timer stopped. Player guessed correctly.");
+            questionCount = 0;
+            gameRunning = 0;
         } else {
             // Output for incorrect name question
             output.textContent = "No";
