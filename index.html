@@ -373,7 +373,7 @@ function answerQuestion() {
             stopTimer();
             const elapsedTime = Math.floor((new Date() - startTime) / 1000); // Calculate total time elapsed
             output.textContent = `Yes! Congratulations! You solved it in ${elapsedTime}s with ${questionCount} questions.`;
-            console.log("Game over. Timer stopped. Player guessed correctly.");
+            if (debugMode) {  console.log("Game over. Timer stopped. Player guessed correctly."); }
             questionCount = 0;
             gameRunning = 0;
         } else {
@@ -387,8 +387,8 @@ function answerQuestion() {
             const autoHide = document.getElementById("auto-hide").checked;
             if (autoHide) {
                 markCharacters(conditions, logicalOperator, true); // Lisää true merkitsemään Auto Hide -käyttö
-                displayCharacters(characters); // Päivitä hahmot näkyviin
-                console.log("answerQuestion : autoHide");
+                displayCharacters(characters); 
+                if (debugMode) {  console.log("answerQuestion : autoHide"); }
             }
         } else {
             output.textContent = "No";
@@ -725,7 +725,7 @@ function displayCharacters(characterList) {
 
     // Näytä piilotettujen hahmojen määrä
     if (debugMode) { console.log(`${hiddenCount} characters are hidden.`); }
-    
+
     // Luo HTML vain näkyville hahmoille
     characterListDiv.innerHTML = visibleCharacters.map(character => {
         // Priority fields in specific order
@@ -748,19 +748,22 @@ function displayCharacters(characterList) {
             .filter(field => field !== null)
             .join(", ");
 
-        // Extract remaining fields for sorting (excluding priority fields, index, name, hidden, and marked)
+        // Extract remaining fields for sorting
         const otherFields = Object.entries(character)
             .filter(([key]) => !["index", "name", "gender", "eyes", "hair", "nose", "skin", "glasses", "beardMustache", "nails", "expression", "hat", "hidden", "marked"].includes(key))
-            .sort(([a], [b]) => a.localeCompare(b)); // Sort remaining fields alphabetically
+            .sort(([a], [b]) => a.localeCompare(b));
 
         // Generate HTML for sorted fields
         const sortedFieldsHTML = otherFields
             .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
             .join(", ");
 
+        // Define CSS class for marked characters
+        const characterClass = character.marked ? "marked" : "";
+
         // Combine index, name, priority fields, and sorted fields
         return `
-            <div id="character-${character.index}" class="character">
+            <div id="character-${character.index}" class="character ${characterClass}">
                 <strong>${character.index}. ${character.name}</strong>: ${priorityFieldsHTML}${sortedFieldsHTML ? `, ${sortedFieldsHTML}` : ""}
             </div>
         `;
