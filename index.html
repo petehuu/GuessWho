@@ -70,7 +70,13 @@
     <option value="48">48</option>
     <option value="64">64</option>
   </select>
-  
+  <div style="margin-top: 10px; text-align: left;">
+  <label style="display: inline-flex; align-items: center; justify-content: flex-start;">
+    <input type="checkbox" id="auto-hide" style="margin-right: 5px;"> Auto Hide
+  </label>
+</div>
+
+      
   <!-- Start game button -->
   <button onclick="startGame()">Start Game</button>
 
@@ -84,9 +90,22 @@
   <div id="question-area" style="margin-top: 20px; display: none;">
     <label for="question">Ask a yes/no question:</label>
     <input id="question" type="text" style="width: 100%;" placeholder="wear glasses">
+    <button id="hide-button" onclick="openCharacterList()">Hide</button>
     <button onclick="answerQuestion()">Submit Question</button>
     <p id="answer-output"></p>
   </div>
+  
+    <!-- Modal window for the character list -->
+    <div id="character-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
+      <div style="position: relative; margin: 10% auto; padding: 20px; background: white; width: 50%;">
+        <h3>Select characters to hide</h3>
+        <form id="character-form">
+          <!-- List generated dynamically with JavaScript -->
+        </form>
+        <button onclick="hideSelectedCharacters()">Hide Selected</button>
+        <button onclick="closeCharacterList()">Close</button>
+      </div>
+    </div>
 
   <script>
       const nameGenderMap = {
@@ -225,7 +244,8 @@
           expression: getRandomOption(options.expression) || "neutral",
           profession: getRandomOption(options.profession) || "unknown",
           accessories: getRandomOption(options.accessories).join(", ") || "none",
-          marked: false
+          marked: false,
+          hidden: false
         });
       }
       return generated;
@@ -364,6 +384,12 @@ function answerQuestion() {
         // Handle non-name questions normally
         if (finalResult) {
             output.textContent = "Yes";
+            const autoHide = document.getElementById("auto-hide").checked;
+            if (autoHide) {
+                markCharacters(conditions, logicalOperator, true); // Lisää true merkitsemään Auto Hide -käyttö
+                displayCharacters(characters); // Päivitä hahmot näkyviin
+                console.log("answerQuestion : autoHide");
+            }
         } else {
             output.textContent = "No";
         }
@@ -392,7 +418,7 @@ function processCondition(conditionKey, target) {
             const targetGender = target.gender.toLowerCase().trim(); // Normalize target gender
             if (debugMode) {  console.log(`Comparing target gender "${targetGender}" with condition gender "${desiredGender}"`); }
             return targetGender === desiredGender;
-        // Hiusten värit
+        // Hiusten v?rit
         case conditionKey.includes("hair") && conditionKey.includes("blonde"):
             const cleanedHair = target.hair.toLowerCase().replace(/[()]/g, "").trim();
             return cleanedHair.includes("blonde");
@@ -419,7 +445,7 @@ function processCondition(conditionKey, target) {
             const cleanedHairStraight = target.hair.toLowerCase().replace(/[()]/g, "").trim();
             return cleanedHairStraight.includes("straight");
 
-        // Silmälasit
+        // Silm?lasit
         case conditionKey.includes("glasses") && conditionKey.includes("regular"):
             return target.glasses === "regular";
         case conditionKey.includes("glasses") && conditionKey.includes("sunglasses"):
@@ -427,7 +453,7 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("glasses") && conditionKey.includes("none"):
             return target.glasses === "none";
             
-        // Nenätyypit
+        // Nen?tyypit
         case conditionKey.includes("nose") && conditionKey.includes("big"):
             return target.nose.toLowerCase().includes("big");
         case conditionKey.includes("nose") && conditionKey.includes("small"):
@@ -447,7 +473,7 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("eyes") && conditionKey.includes("small"):
             return target.eyes.toLowerCase().includes("small");
 
-        // Silmien värit
+        // Silmien v?rit
         case conditionKey.includes("eyes") && conditionKey.includes("blue"):
             return target.eyes.toLowerCase().includes("blue");
         case conditionKey.includes("eyes") && conditionKey.includes("brown"):
@@ -457,7 +483,7 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("eyes") && conditionKey.includes("hazel"):
             return target.eyes.toLowerCase().includes("hazel");
 
-        // Yhdistetyt muodot ja värit
+        // Yhdistetyt muodot ja v?rit
         case conditionKey.includes("eyes") && conditionKey.includes("round") && conditionKey.includes("blue"):
             return target.eyes.toLowerCase().includes("round") && target.eyes.toLowerCase().includes("blue");
         case conditionKey.includes("eyes") && conditionKey.includes("almond") && conditionKey.includes("green"):
@@ -588,31 +614,49 @@ function processCondition(conditionKey, target) {
 
 function evaluateCondition(condition) {
     const conditionKey = condition.toLowerCase().trim();
-    return processCondition(conditionKey, targetCharacter); // Käyttää targetCharacteria
+    return processCondition(conditionKey, targetCharacter); // K?ytt?? targetCharacteria
 }
 
 function evaluateCharacterCondition(character, condition) {
     const conditionKey = condition.toLowerCase().trim();
-    return processCondition(conditionKey, character); // Käyttää yksittäistä hahmoa
+    return processCondition(conditionKey, character); // K?ytt?? yksitt?ist? hahmoa
 }
 
-function markCharacters(conditions, logicalOperator) {
-    if (debugMode) {  console.log("Conditions passed to markCharacters:", conditions);  }
-    if (debugMode) {  console.log("Logical operator:", logicalOperator); }
+function markCharacters(conditions, logicalOperator, autoHide = false) {
+    if (debugMode) { console.log("Conditions passed to markCharacters:", conditions); }
+    if (debugMode) { console.log("Logical operator:", logicalOperator); }
 
     characters.forEach(character => {
         const conditionResults = conditions.map(cond => evaluateCharacterCondition(character, cond));
-        if (debugMode) {  console.log(`Evaluating ${character.name} with conditions:`, conditionResults); }
+        if (debugMode) { console.log(`Evaluating ${character.name} with conditions:`, conditionResults); }
 
-        // Delegate logical operation to helper function
+        // Determine if character satisfies the logical conditions
         const shouldBeMarked = evaluateLogicalOperator(conditionResults, logicalOperator);
-        character.marked = shouldBeMarked; // Apply marking based on results
-
-        if (debugMode) {  console.log(`${shouldBeMarked ? "Marked" : "Unmarked"} ${character.name}`); }
+        
+        if (autoHide) {
+            // Hide characters that don't meet the condition
+            character.hidden = !shouldBeMarked;
+            if (debugMode) {
+                console.log(`${!shouldBeMarked ? "Hiding" : "Keeping visible"} ${character.name}`);
+            }
+        } else {
+            // Only mark characters without hiding them
+            character.marked = shouldBeMarked;
+            if (debugMode) {
+                console.log(`${shouldBeMarked ? "Marked" : "Unmarked"} ${character.name}`);
+            }
+        }
     });
 
-    if (debugMode) {  console.log("Marked characters:", characters.filter(character => character.marked));  }
+    // Debug log for hidden or marked characters
+    if (debugMode) { 
+        console.log("Marked characters:", characters.filter(character => character.marked));
+        if (autoHide) {
+            console.log("Hidden characters:", characters.filter(character => character.hidden));
+        }
+    }
 }
+
 
 // Helper function to evaluate logical operator
 function evaluateLogicalOperator(results, logicalOperator) {
@@ -628,20 +672,100 @@ function evaluateLogicalOperator(results, logicalOperator) {
     }
 }
 
-function displayCharacters(characterList) {
-      const characterListDiv = document.getElementById("game-area");
-      characterListDiv.innerHTML = characterList.map(character => `
-        <div class="character ${character.marked ? 'marked' : ''}">
-          <strong>${character.index}. ${character.name}</strong>: 
-          Gender: ${character.gender}, Hair: ${character.hair}, Glasses: ${character.glasses}, 
-          Hat: ${character.hat}, Beard/Mustache: ${character.beardMustache}, Nose: ${character.nose}, 
-          Eyes: ${character.eyes}, Skin: ${character.skin}, Outfit: ${character.outfit}, 
-          Jewelry: ${character.jewelry}, Nails: ${character.nails}, Expression: ${character.expression}, 
-          Profession: ${character.profession}, Accessories: ${character.accessories}
-        </div>
-      `).join("");
+function openCharacterList() {
+    const modal = document.getElementById("character-modal");
+    const form = document.getElementById("character-form");
+
+    modal.style.display = "block"; // Show the modal
+
+    // Populate the form with character checkboxes, indicating hidden ones
+    form.innerHTML = characters.map((character, index) => {
+        return `
+            <div>
+                <label>
+                    <input type="checkbox" value="${index}" name="character" ${character.hidden ? "checked" : ""}>
+                    ${character.name} ${character.hidden ? "(Hidden)" : ""}
+                </label>
+            </div>
+        `;
+    }).join('');
 }
 
+function hideSelectedCharacters() {
+    // Gather all checkboxes in the form
+    const checkboxes = Array.from(document.querySelectorAll('input[name="character"]'));
+
+    checkboxes.forEach(input => {
+        const index = parseInt(input.value); // Get the character index from checkbox value
+        if (input.checked) {
+            // Mark as hidden if checkbox is checked
+            characters[index].hidden = true;
+        } else {
+            // Remove hidden status if checkbox is unchecked
+            characters[index].hidden = false;
+        }
+    });
+
+    // Update the UI and close the modal
+    closeCharacterList(); // Close the modal
+    displayCharacters(characters); // Refresh the visible characters
+}
+
+
+function closeCharacterList() {
+    const modal = document.getElementById("character-modal");
+    modal.style.display = "none"; // Piilota modal
+}
+
+
+function displayCharacters(characterList) {
+    const characterListDiv = document.getElementById("game-area");
+    const hiddenCount = characterList.filter(character => character.hidden).length;
+    const visibleCharacters = characterList.filter(character => !character.hidden);
+
+    // Näytä piilotettujen hahmojen määrä
+    if (debugMode) { console.log(`${hiddenCount} characters are hidden.`); }
+    
+    // Luo HTML vain näkyville hahmoille
+    characterListDiv.innerHTML = visibleCharacters.map(character => {
+        // Priority fields in specific order
+        const priorityFields = [
+            { key: "gender", label: "Gender" },
+            { key: "eyes", label: "Eyes" },
+            { key: "hair", label: "Hair" },
+            { key: "nose", label: "Nose" },
+            { key: "skin", label: "Skin" },
+            { key: "glasses", label: "Glasses" },
+            { key: "beardMustache", label: "Beard/Mustache" },
+            { key: "nails", label: "Nails" },
+            { key: "expression", label: "Expression" },
+            { key: "hat", label: "Hat" }
+        ];
+
+        // Generate HTML for priority fields
+        const priorityFieldsHTML = priorityFields
+            .map(({ key, label }) => character[key] !== undefined ? `${label}: ${character[key]}` : null)
+            .filter(field => field !== null)
+            .join(", ");
+
+        // Extract remaining fields for sorting (excluding priority fields, index, name, hidden, and marked)
+        const otherFields = Object.entries(character)
+            .filter(([key]) => !["index", "name", "gender", "eyes", "hair", "nose", "skin", "glasses", "beardMustache", "nails", "expression", "hat", "hidden", "marked"].includes(key))
+            .sort(([a], [b]) => a.localeCompare(b)); // Sort remaining fields alphabetically
+
+        // Generate HTML for sorted fields
+        const sortedFieldsHTML = otherFields
+            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
+            .join(", ");
+
+        // Combine index, name, priority fields, and sorted fields
+        return `
+            <div id="character-${character.index}" class="character">
+                <strong>${character.index}. ${character.name}</strong>: ${priorityFieldsHTML}${sortedFieldsHTML ? `, ${sortedFieldsHTML}` : ""}
+            </div>
+        `;
+    }).join("");
+}
 
   </script>
 </body>
