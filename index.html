@@ -191,7 +191,7 @@
       jewelry: [["necklace"], ["bracelet"], ["necklace, bracelet"], ["none"]],
       nails: ["painted", "natural"],
       expression: ["smiling", "serious", "thoughtful", "raised eyebrows"],
-      profession: ["doctor's coat", "artist's tools", "sportswear", "helmet"],
+      profession: ["doctor\u2019s coat", "artist\u2019s tools", "sportswear", "helmet"],
       accessories: [["handbag"], ["backpack"], ["handbag", "backpack"], ["none"]],
     };
 
@@ -209,6 +209,7 @@
 
     let characters = [];
     let targetCharacter = null;
+    let previousAnswer = null; // Initialize variable to store the previous answer
 
     function getRandomOption(optionArray) {
       return optionArray[Math.floor(Math.random() * optionArray.length)];
@@ -365,6 +366,7 @@ function answerQuestion() {
     }
 
     const finalResult = calculateFinalResult(results, logicalOperator);
+    previousAnswer = finalResult ? "Yes" : "No";
     if (debugMode) {  console.log("Final result for target character:", finalResult); }
 
     if (question.startsWith("name ")) {
@@ -386,7 +388,7 @@ function answerQuestion() {
             output.textContent = "Yes";
             const autoHide = document.getElementById("auto-hide").checked;
             if (autoHide) {
-                markCharacters(conditions, logicalOperator, true); // Lisää true merkitsemään Auto Hide -käyttö
+                markCharacters(conditions, logicalOperator, true); // Lis?? true merkitsem??n Auto Hide -k?ytt?
                 displayCharacters(characters); 
                 if (debugMode) {  console.log("answerQuestion : autoHide"); }
             }
@@ -410,42 +412,21 @@ function processCondition(conditionKey, target) {
             const desiredName = conditionKey.split(" ")[1]?.toLowerCase().trim();
             if (debugMode) {  console.log(`Comparing target name "${cleanedName}" with condition name "${desiredName}"`); }
             return cleanedName === desiredName;
+        
         // Gender-specific condition
-        case conditionKey.includes("female"):
-        case conditionKey.includes("male"):
-        case conditionKey.includes("other"):
-            const desiredGender = conditionKey.trim().toLowerCase(); // "female" or "male" or "other"
+        case conditionKey.includes("gender") || conditionKey.includes("female") || conditionKey.includes("male") || conditionKey.includes("other"):
+            const desiredGender = conditionKey.replace("gender:", "").trim().toLowerCase(); // Remove 'gender:' if present
             const targetGender = target.gender.toLowerCase().trim(); // Normalize target gender
-            if (debugMode) {  console.log(`Comparing target gender "${targetGender}" with condition gender "${desiredGender}"`); }
+            if (debugMode) { console.log(`Comparing target gender "${targetGender}" with condition gender "${desiredGender}"`);  }
             return targetGender === desiredGender;
-        // Hiusten v?rit
-        case conditionKey.includes("hair") && conditionKey.includes("blonde"):
-            const cleanedHair = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHair.includes("blonde");
-        case conditionKey.includes("hair") && conditionKey.includes("brown"):
-            const cleanedHairBrown = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairBrown.includes("brown");
-        case conditionKey.includes("hair") && conditionKey.includes("black"):
-            const cleanedHairBlack = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairBlack.includes("black");
-        case conditionKey.includes("hair") && conditionKey.includes("red"):
-            const cleanedHairRed = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairRed.includes("red");
-        // Hiustyylit
-        case conditionKey.includes("hair") && conditionKey.includes("short"):
-            const cleanedHairShort = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairShort.includes("short");
-        case conditionKey.includes("hair") && conditionKey.includes("long"):
-            const cleanedHairLong = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairLong.includes("long");
-        case conditionKey.includes("hair") && conditionKey.includes("curly"):
-            const cleanedHairCurly = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairCurly.includes("curly");
-        case conditionKey.includes("hair") && conditionKey.includes("straight"):
-            const cleanedHairStraight = target.hair.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedHairStraight.includes("straight");
+        
+        // Hiukset
+        case conditionKey.includes("hair"):
+            const conditions = conditionKey.split(" and ").map(cond => cond.trim());
+            return conditions.some(cond => cond.startsWith("hair:") && target.hair.includes(cond.replace("hair:", "").trim()));
 
-        // Silm?lasit
+
+        // Silmälasit
         case conditionKey.includes("glasses") && conditionKey.includes("regular"):
             return target.glasses === "regular";
         case conditionKey.includes("glasses") && conditionKey.includes("sunglasses"):
@@ -453,7 +434,7 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("glasses") && conditionKey.includes("none"):
             return target.glasses === "none";
             
-        // Nen?tyypit
+        // Nenätyypit
         case conditionKey.includes("nose") && conditionKey.includes("big"):
             return target.nose.toLowerCase().includes("big");
         case conditionKey.includes("nose") && conditionKey.includes("small"):
@@ -463,31 +444,11 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("nose") && conditionKey.includes("wide"):
             return target.nose.toLowerCase().includes("wide");
             
-        // Silmien muodot
-        case conditionKey.includes("eyes") && conditionKey.includes("round"):
-            return target.eyes.toLowerCase().includes("round");
-        case conditionKey.includes("eyes") && conditionKey.includes("almond"):
-            return target.eyes.toLowerCase().includes("almond");
-        case conditionKey.includes("eyes") && conditionKey.includes("large"):
-            return target.eyes.toLowerCase().includes("large");
-        case conditionKey.includes("eyes") && conditionKey.includes("small"):
-            return target.eyes.toLowerCase().includes("small");
-
-        // Silmien v?rit
-        case conditionKey.includes("eyes") && conditionKey.includes("blue"):
-            return target.eyes.toLowerCase().includes("blue");
-        case conditionKey.includes("eyes") && conditionKey.includes("brown"):
-            return target.eyes.toLowerCase().includes("brown");
-        case conditionKey.includes("eyes") && conditionKey.includes("green"):
-            return target.eyes.toLowerCase().includes("green");
-        case conditionKey.includes("eyes") && conditionKey.includes("hazel"):
-            return target.eyes.toLowerCase().includes("hazel");
-
-        // Yhdistetyt muodot ja v?rit
-        case conditionKey.includes("eyes") && conditionKey.includes("round") && conditionKey.includes("blue"):
-            return target.eyes.toLowerCase().includes("round") && target.eyes.toLowerCase().includes("blue");
-        case conditionKey.includes("eyes") && conditionKey.includes("almond") && conditionKey.includes("green"):
-            return target.eyes.toLowerCase().includes("almond") && target.eyes.toLowerCase().includes("green");
+        // Silmät
+         case conditionKey.includes("eyes:"):
+            const eyesTrait = conditionKey.split(" and ").find(cond => cond.startsWith("eyes:")).replace("eyes:", "").trim().toLowerCase(); // Extract the "eyes" trait
+            const cleanedEyes = target.eyes.toLowerCase().replace(/[()]/g, "").trim(); // Normalize target data
+            return cleanedEyes.includes(eyesTrait);
 
         // Iho
         case conditionKey.includes("skin") && conditionKey.includes("light"):
@@ -525,49 +486,11 @@ function processCondition(conditionKey, target) {
         case conditionKey.includes("hat") && conditionKey.includes("none"):
             return target.hat === "none";            
 
-        // T-shirt tarkistukset
-        case conditionKey.includes("t-shirt") && conditionKey.includes("high"):
-            const cleanedTShirtHigh = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedTShirtHigh.includes("t-shirt") && cleanedTShirtHigh.includes("collar: high");
-        case conditionKey.includes("t-shirt") && conditionKey.includes("low"):
-            const cleanedTShirtLow = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedTShirtLow.includes("t-shirt") && cleanedTShirtLow.includes("collar: low");
-        case conditionKey.includes("t-shirt") && conditionKey.includes("open"):
-            const cleanedTShirtOpen = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedTShirtOpen.includes("t-shirt") && cleanedTShirtOpen.includes("collar: open");
-
-        // Shirt tarkistukset
-        case conditionKey.includes("shirt") && conditionKey.includes("high"):
-            const cleanedShirtHigh = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedShirtHigh.includes("shirt") && cleanedShirtHigh.includes("collar: high") && !cleanedShirtHigh.includes("t-shirt");
-        case conditionKey.includes("shirt") && conditionKey.includes("low"):
-            const cleanedShirtLow = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedShirtLow.includes("shirt") && cleanedShirtLow.includes("collar: low") && !cleanedShirtLow.includes("t-shirt");
-        case conditionKey.includes("shirt") && conditionKey.includes("open"):
-            const cleanedShirtOpen = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedShirtOpen.includes("shirt") && cleanedShirtOpen.includes("collar: open") && !cleanedShirtOpen.includes("t-shirt");
-
-        // Jacket tarkistukset
-        case conditionKey.includes("jacket") && conditionKey.includes("open"):
-            const cleanedJacketOpen = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedJacketOpen.includes("jacket") && cleanedJacketOpen.includes("collar: open");
-        case conditionKey.includes("jacket") && conditionKey.includes("high"):
-            const cleanedJacketHigh = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedJacketHigh.includes("jacket") && cleanedJacketHigh.includes("collar: high");
-        case conditionKey.includes("jacket") && conditionKey.includes("low"):
-            const cleanedJacketLow = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedJacketLow.includes("jacket") && cleanedJacketLow.includes("collar: low");
-
-        // Sweater tarkistukset
-        case conditionKey.includes("sweater") && conditionKey.includes("open"):
-            const cleanedSweaterOpen = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedSweaterOpen.includes("sweater") && cleanedSweaterOpen.includes("collar: open");
-        case conditionKey.includes("sweater") && conditionKey.includes("high"):
-            const cleanedSweaterHigh = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedSweaterHigh.includes("sweater") && cleanedSweaterHigh.includes("collar: high");
-        case conditionKey.includes("sweater") && conditionKey.includes("low"):
-            const cleanedSweaterLow = target.outfit.toLowerCase().replace(/[()]/g, "").trim();
-            return cleanedSweaterLow.includes("sweater") && cleanedSweaterLow.includes("collar: low");
+        // Vaatteet
+        case conditionKey.includes("outfit:"):
+            const outfitConditions = conditionKey.split(" and ").filter(cond => cond.includes("outfit:")).map(cond => cond.replace("outfit:", "").trim().toLowerCase());
+            const cleanedOutfit = target.outfit.toLowerCase().replace(/[()]/g, "").trim(); // Normalize target data
+            return outfitConditions.every(trait => cleanedOutfit.includes(trait));
 
         // Korut
         case conditionKey.includes("necklace"):
@@ -580,30 +503,17 @@ function processCondition(conditionKey, target) {
             return target.jewelry.toLowerCase() === "none";
 
         // Ammatti
-        case conditionKey.includes("profession") && conditionKey.includes("doctor"):
-            return target.profession.toLowerCase().includes("doctor");
-        case conditionKey.includes("profession") && conditionKey.includes("artist"):
-            return target.profession.toLowerCase().includes("artist");
-        case conditionKey.includes("profession") && conditionKey.includes("sportswear"):
-            return target.profession.toLowerCase().includes("sportswear");
-        case conditionKey.includes("profession") && conditionKey.includes("helmet"):
-            return target.profession.toLowerCase().includes("helmet");
+        case conditionKey.includes("profession"):
+            const professionTraits = conditionKey.replace("profession:", "").toLowerCase().split(" and ").map(trait => trait.trim());
+            const cleanedProfession = target.profession.toLowerCase().trim(); // Normalize target data
+            return professionTraits.every(trait => cleanedProfession.includes(trait));
         
         // Laukku
-        case conditionKey.includes("accessories") && conditionKey.includes("handbag"):
-            return target.accessories.includes("handbag");
-        case conditionKey.includes("accessories") && conditionKey.includes("backpack"):
-            return target.accessories.includes("backpack");
-        case conditionKey.includes("accessories") && conditionKey.includes("none"):
-            return target.accessories.includes("none");
-        case conditionKey.includes("accessories") && conditionKey.includes("handbag") && conditionKey.includes("backpack"):
-            return target.accessories.includes("handbag") && target.accessories.includes("backpack");
-        case conditionKey.includes("handbag"):
-            return target.accessories.includes("handbag");
-        case conditionKey.includes("backpack"):
-            return target.accessories.includes("backpack");
-        case conditionKey.includes("handbag") && conditionKey.includes("backpack"):
-            return target.accessories.includes("handbag") && target.accessories.includes("backpack");    
+       case conditionKey.includes("accessories:"):
+            const accessoriesTraits = conditionKey.split(" and ")
+                .filter(cond => cond.includes("accessories:")) // Select only traits related to accessories
+                .map(cond => cond.replace("accessories:", "").trim().toLowerCase()); // Extract and normalize traits
+            return accessoriesTraits.every(trait => target.accessories.includes(trait));
 
         // Oletusarvo
         default:
@@ -657,6 +567,19 @@ function markCharacters(conditions, logicalOperator, autoHide = false) {
     }
 }
 
+function markCharacter(characterId) {
+    // Reset all characters' marked status first
+    characters.forEach(char => char.marked = false);
+
+    // Mark the selected character
+    const character = characters.find(char => char.index === characterId);
+    if (character) {
+        character.marked = true; // Apply the marking
+        displayCharacters(characters); // Refresh UI
+        if (debugMode) { console.log(`Marked character:`, character);  }
+    }
+}
+
 
 // Helper function to evaluate logical operator
 function evaluateLogicalOperator(results, logicalOperator) {
@@ -672,24 +595,6 @@ function evaluateLogicalOperator(results, logicalOperator) {
     }
 }
 
-function openCharacterList() {
-    const modal = document.getElementById("character-modal");
-    const form = document.getElementById("character-form");
-
-    modal.style.display = "block"; // Show the modal
-
-    // Populate the form with character checkboxes, indicating hidden ones
-    form.innerHTML = characters.map((character, index) => {
-        return `
-            <div>
-                <label>
-                    <input type="checkbox" value="${index}" name="character" ${character.hidden ? "checked" : ""}>
-                    ${character.name} ${character.hidden ? "(Hidden)" : ""}
-                </label>
-            </div>
-        `;
-    }).join('');
-}
 
 function hideSelectedCharacters() {
     // Gather all checkboxes in the form
@@ -718,17 +623,59 @@ function closeCharacterList() {
 }
 
 
+
+
+function addToQuestion(text, event) {
+    if (event) event.stopPropagation(); // Prevent event propagation to parent container
+
+    const questionField = document.getElementById("question");
+    const currentQuestion = questionField.value.toLowerCase();
+
+    if (debugMode) { console.log("Initial question field:", currentQuestion); }
+    if (debugMode) { console.log("New text to add:", text); }
+
+    const match = text.match(/\((.*?)\)/); // Extract text inside parentheses
+    const parsedConditions = [];
+    if (match) {
+        const insideParentheses = match[1].toLowerCase().trim(); // Content inside parentheses
+        const outsideParentheses = text.replace(/\(.*?\)/, "").trim().toLowerCase(); // Content outside parentheses
+
+        const prefix = outsideParentheses.split(":")[0]; // Dynamically extract prefix
+        parsedConditions.push(outsideParentheses); // Add outside condition
+        parsedConditions.push(`${prefix}: ${insideParentheses}`); // Add inside condition with prefix
+    } else {
+        // No parentheses, process text as a single condition
+        parsedConditions.push(text.toLowerCase());
+    }
+
+    if (debugMode) { console.log("Parsed conditions:", parsedConditions); }
+
+    if (previousAnswer === "No") {
+        questionField.value = parsedConditions.join(" and "); // Overwrite the question field with all conditions joined by "and"
+        if (debugMode) { console.log("Previous answer was 'No'. Overwriting question field:", questionField.value); }
+    } else {
+        parsedConditions.forEach(condition => {  // Append conditions to the existing question field
+            if (!currentQuestion.includes(condition)) {
+                if (questionField.value) {
+                    questionField.value += ` and ${condition}`;  // If there's already content, add "and" before appending
+                } else {
+                    questionField.value = condition;
+                }
+            }
+        });
+
+        if (debugMode) { console.log("Final question field after appending:", questionField.value); }
+    }
+}
+
+
 function displayCharacters(characterList) {
     const characterListDiv = document.getElementById("game-area");
-    const hiddenCount = characterList.filter(character => character.hidden).length;
+
+    // Filter out hidden characters
     const visibleCharacters = characterList.filter(character => !character.hidden);
 
-    // Näytä piilotettujen hahmojen määrä
-    if (debugMode) { console.log(`${hiddenCount} characters are hidden.`); }
-
-    // Luo HTML vain näkyville hahmoille
     characterListDiv.innerHTML = visibleCharacters.map(character => {
-        // Priority fields in specific order
         const priorityFields = [
             { key: "gender", label: "Gender" },
             { key: "eyes", label: "Eyes" },
@@ -742,32 +689,50 @@ function displayCharacters(characterList) {
             { key: "hat", label: "Hat" }
         ];
 
-        // Generate HTML for priority fields
         const priorityFieldsHTML = priorityFields
-            .map(({ key, label }) => character[key] !== undefined ? `${label}: ${character[key]}` : null)
+            .map(({ key, label }) => character[key] !== undefined 
+                ? `<span class="trait" onclick="addToQuestion('${label.toLowerCase()}: ${character[key]}')">${label}: ${character[key]}</span>` 
+                : null)
             .filter(field => field !== null)
             .join(", ");
 
-        // Extract remaining fields for sorting
-        const otherFields = Object.entries(character)
-            .filter(([key]) => !["index", "name", "gender", "eyes", "hair", "nose", "skin", "glasses", "beardMustache", "nails", "expression", "hat", "hidden", "marked"].includes(key))
-            .sort(([a], [b]) => a.localeCompare(b));
-
-        // Generate HTML for sorted fields
-        const sortedFieldsHTML = otherFields
-            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
+        const otherFieldsHTML = Object.keys(character)
+            .filter(key => !priorityFields.map(f => f.key).includes(key) && !["index", "name", "hidden", "marked"].includes(key))
+            .map(key => `
+                <span class="trait" onclick="addToQuestion('${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()}: ${character[key]}')">
+                    ${key.charAt(0).toUpperCase() + key.slice(1)}: ${character[key]}
+                </span>
+            `)
             .join(", ");
 
-        // Define CSS class for marked characters
         const characterClass = character.marked ? "marked" : "";
 
-        // Combine index, name, priority fields, and sorted fields
         return `
-            <div id="character-${character.index}" class="character ${characterClass}">
-                <strong>${character.index}. ${character.name}</strong>: ${priorityFieldsHTML}${sortedFieldsHTML ? `, ${sortedFieldsHTML}` : ""}
+            <div id="character-${character.index}" class="character ${characterClass}" onclick="markCharacter(${character.index})">
+                <strong>${character.index}. ${character.name}</strong>: ${priorityFieldsHTML}${otherFieldsHTML ? `, ${otherFieldsHTML}` : ""}
             </div>
         `;
     }).join("");
+}
+
+
+function openCharacterList() {
+    const modal = document.getElementById("character-modal");
+    const form = document.getElementById("character-form");
+
+    modal.style.display = "block"; // Show the modal
+
+    // Populate the form with character checkboxes, indicating hidden ones
+    form.innerHTML = characters.map((character, index) => {
+        return `
+            <div>
+                <label>
+                    <input type="checkbox" value="${index}" name="character" ${character.hidden ? "checked" : ""}>
+                    ${character.name} ${character.hidden ? "(Hidden)" : ""}
+                </label>
+            </div>
+        `;
+    }).join('');
 }
 
   </script>
